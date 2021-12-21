@@ -55,6 +55,96 @@ systemctl isolate multi-user.target
 systemctl isolate graphical.target
 
 #简易防火墙管理
+[root@hejian ~]# firewall-cmd --list-all
+FirewallD is not running
+
+#添加httpd服务，只生效一次
+firewall-cmd --add-service=http
+firewall-cmd --list-all
+#永久生效
+firewall-cmd --add-service=httpd --permanent
+firewall-cmd --list-all --permanent
+
+#打包
+tar [-z|j|J -c|t|x -v -f tar文档名称] [filename]
+-z|j|J   gzip|bzip2|xz
+   gzip  速度最快，占空间最大
+   xz    速度最慢，压缩率最高
+-c|t|x   打包|查阅|解压
+-v       是否显示执行过程
+-f       文件名称
+
+tar -Jcv -f etc.tar.xz /etc
+#打包压缩
+
+tar -Jtv -f etc.tar.xz
+#不用解压，查看压缩包内容
+
+
+Linux的工作编排
+单次工作编排 at
+[root@hejian ~]# systemctl status atd
+● atd.service - Job spooling tools
+   Loaded: loaded (/usr/lib/systemd/system/atd.service; enabled; vendor preset: enabled)
+   Active: active (running) since 日 2021-11-14 12:35:39 CST; 1 months 6 days ago
+ Main PID: 1309 (atd)
+   CGroup: /system.slice/atd.service
+           └─1309 /usr/sbin/atd -f
+
+11月 14 12:35:39 VM-0-14-centos systemd[1]: Started Job spooling tools.
+
+#编排单次执行任务
+at 11:00
+at> ip addr show &> /home/hejian/myip.txt
+at> <EOT> #ctrl+d 结束
+
+atq
+#列出at的单次状态
+
+循环工作编排   crontab
+systemctl status crond
+分时日月周 指令
+
+*任意
+,时间分割
+   0 3,6 * * * CMD
+   3：00 和 6：00 执行CMD
+-时间范围
+   20 8-12 * * * CMD
+   八点到12点的20分执行CMD
+/n每隔n时间执行
+   * /5 * * *
+   每五分钟执行一次
+   
+#周期执行
+echo "0 11 * * 0 root ip addr show &> /home/hejian/myip.txt" > /etc/crontab
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
