@@ -94,6 +94,13 @@ PID   进程ID
 PPID  父节点PID
 C     CPU使用率
 PRI/NI    priority/Nice 优先级顺序，数值越小越快被CPU执行
+          PRI(new)=PRI(old)+nice
+                nice值 -20到19
+                root可以随意调整自己和他人的nice值（-20~19）
+                一般使用者只能调自己，nice值（0~19）
+                一般使用者只能调高nice值
+                nice -n -5 vim &
+                #vim进程优先级调高5（root）
 ADDR|SZ|WCHAN   程序在内存什么地方，running程序是-
                 SZ  使用多少存储
                 WCHAN 是否运行中，-为运行中
@@ -121,6 +128,79 @@ STAT  R|S|T|Z
     1   925   925   925 ?           -1 Ss       0   0:00 nginx: master process /usr/local/nginx/sbin/nginx
   925 23448   925   925 ?           -1 S     1000   0:11  \_ nginx: worker process
 17272 24942 24941 17272 pts/0    24941 S+       0   0:00          \_ grep -E --color=auto nginx|USER
+
+pstree
+yum provides pstree
+yum -y install psmisc
+
+killall
+killall nginx
+
+free
+#查看内存
+free -m
+[root@hejian ~]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:           1837         346          96           0        1394        1299
+Swap:             0           0           0
+
+uname
+查阅核心资料
+[root@hejian ~]# uname -a
+Linux hejian 3.10.0-1160.45.1.el7.x86_64 #1 SMP Wed Oct 13 17:20:51 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+Linux（核心） hejian(主机名) 3.10.0-1160.45.1.el7.x86_64（核心版本） #1 SMP Wed Oct 13 17:20:51 UTC 2021（核心版本建立时间） x86_64（x86_64位平台） x86_64 x86_64 GNU/Linux
+-a      全部
+-s      核心
+-r      核心版本
+-m      平台 x86_64
+
+uptime
+启动时间和工作负载
+[root@hejian ~]# uptime
+ 16:26:34 up 38 days,  3:51,  2 users,  load average: 0.11, 0.17, 0.11
+ 开机时间，使用人数，1，5，15分钟的平均负载
+
+netstat
+netstat -lnptu
+-l      监听进程，listen
+-n      不显示服务名，显示端口
+-p      pid进程ID
+-t      tcp
+[root@hejian ~]# netstat -lnptu
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:11211           0.0.0.0:*               LISTEN      910/memcached       
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      925/nginx: master p 
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      22162/sshd          
+tcp        0      0 0.0.0.0:443             0.0.0.0:*               LISTEN      925/nginx: master p 
+tcp        0      0 127.0.0.1:9000          0.0.0.0:*               LISTEN      913/php-fpm: master 
+tcp        0      0 0.0.0.0:3306            0.0.0.0:*               LISTEN      1193/mysqld         
+tcp6       0      0 :::11211                :::*                    LISTEN      910/memcached       
+tcp6       0      0 :::9418                 :::*                    LISTEN      1/systemd           
+udp        0      0 0.0.0.0:1701            0.0.0.0:*                           2474/xl2tpd
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
