@@ -1,0 +1,76 @@
+# 1. 先看看 VG 的量夠不夠用：
+[root@localhost ~]# vgdisplay
+  --- Volume group ---
+  VG Name               server
+  System ID
+  Format                lvm2
+....(中間省略)....
+  VG Size               4.88 GiB  <==只有區區 5G左右
+  PE Size               4.00 MiB
+  Total PE              1249
+  Alloc PE / Size       1249 / 4.88 GiB
+  Free  PE / Size       0 / 0     <==完全沒有剩餘的容量了！
+  VG UUID               SvAEou-2quf-Z1Tr-Wsdz-2UY8-Cmfm-Ni0Oaf
+# 真慘！已經沒有多餘的 VG 容量可以使用了！因此，我們得要增加 PV 才行。
+
+# 2. 開始製作出所需要的 partition 吧！作為 PV 用的！
+[root@localhost ~]# fdisk /dev/sda  <==詳細流程我不寫了！自己瞧
+
+Command (m for help): p
+   Device Boot      Start    End      Blocks   Id  System
+....(中間省略)....
+/dev/sda8            1812   1939     1024000   83  Linux <==最後一個磁柱
+
+Command (m for help): n
+First cylinder (1173-3264, default 1173): 1940  <==上面查到的號碼加 1
+Last cylinder, +cylinders or +size{K,M,G} (1940-3264, default 3264): +2G
+
+Command (m for help): t
+Partition number (1-9): 9
+Hex code (type L to list codes): 8e
+
+Command (m for help): p
+   Device Boot  Start    End   Blocks  Id  System
+/dev/sda9        1940   2201  2104515  8e  Linux LVM <==得到 /dev/sda9
+
+Command (m for help): w
+
+[root@localhost ~]# partprobe <==在虛擬機上面得要 reboot 才行！
+
+# 3. 將 /dev/sda9 加入 PV，並將該 PV 加入 server 這個 VG 吧
+[root@localhost ~]# pvcreate /dev/sda9
+[root@localhost ~]# vgextend server /dev/sda9
+[root@localhost ~]# vgdisplay
+....(前面省略)....
+  VG Size               6.88 GiB       <==這個 VG 最大就是 6.88G 啦
+....(中間省略)....
+  Free  PE / Size       513 / 2.00 GiB <==有多出 2GB 的容量可用了！
+
+# 4. 準備加大 /home，開始前，還是先觀察一下才增加 LV 容量較好！
+[root@localhost ~]# lvdisplay
+  --- Logical volume ---
+  LV Name                /dev/server/myhome <==這是 LV 的名字！
+  VG Name                server
+....(中間省略)....
+  LV Size                4.88 GiB  <==只有 5GB 左右，需要增加 2GB 囉
+....(底下省略)....
+# 看起來，是需要增加容量囉！我們使用 lvresize 來擴大容量吧！
+
+[root@localhost ~]# lvresize -L 6.88G /dev/server/myhome
+  Rounding up size to full physical extent 6.88 GiB
+  Extending logical volume myhome to 6.88 GiB  <==處理完畢囉！
+  Logical volume myhome successfully resized
+# 看來確實是擴大到 6.88GB 囉！開始處理檔案系統吧！
+
+# 5. 擴大檔案系統
+[root@localhost ~]# resize2fs /dev/server/myhome
+resize2fs 1.41.12 (17-May-2010)
+Filesystem at /dev/server/myhome is mounted on /home; on-line resizing required
+old desc_blocks = 1, new_desc_blocks = 1
+Performing an on-line resize of /dev/server/myhome to 1804288 (4k) blocks.
+The filesystem on /dev/server/myhome is now 1804288 blocks long.
+
+[root@localhost ~]# df -h
+檔案系統              Size  Used Avail Use% 掛載點
+/dev/mapper/server-myhome
+                      6.8G  140M  6.4G   3% /home
