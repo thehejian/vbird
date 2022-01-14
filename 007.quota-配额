@@ -1,0 +1,57 @@
+#!/bin/bash
+#cat >> /etc/fastab << EOF
+#/dev/mapper/server-myhome /home       ext4  defaults,usrquota,grpquota  1 2
+#EOF
+#这样不行
+
+#vim /etc/fastab
+#加下面，不用#
+#/dev/mapper/server-myhome /home       ext4  defaults,usrquota,grpquota  1 2
+
+umount /home; mount -a
+#umount: /home: not mounted
+#mount: special device /dev/mapper/server-myhome does not exist
+
+# 2. 製作 Quota 資料檔，並啟動 Quota 支援
+quotacheck -avug
+quotacheck: Scanning /dev/mapper/server-myhome [/home] done
+
+# 3. 製作 Quota 資料給用戶
+[root@localhost ~]# edquota -u vbirduser1
+Disk quotas for user vbirduser1 (uid 500):
+  Filesystem                 blocks   soft     hard    inodes  soft  hard
+  /dev/mapper/server-myhome      20   1800000  2000000      5     0     0
+  
+[root@localhost ~]# repquota -au
+*** Report for user quotas on device /dev/mapper/server-myhome
+Block grace time: 7days; Inode grace time: 7days
+                        Block limits                File limits
+User            used    soft    hard  grace    used  soft  hard  grace
+----------------------------------------------------------------------
+root       --      24       0       0              3     0     0
+vbirduser1 --      20 1800000 2000000              5     0     0
+vbirduser2 --      20 1800000 2000000              5     0     0
+vbirduser3 --      20 1800000 2000000              5     0     0
+vbirduser4 --      20 1800000 2000000              5     0     0
+vbirduser5 --      20 1800000 2000000              5     0     0  
+  
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
