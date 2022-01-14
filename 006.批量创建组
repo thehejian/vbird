@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cat > 006useradd.sh << EOF
+#!/bin/bash
+groupadd vbirdgroup
+for username in vbirduser1 vbirduser2 vbirduser3 vbirduser4 vbirduser5
+do
+	useradd -G vbirdgroup $username
+	echo "password" | passwd --stdin $username
+done
+EOF
+
+bash 006useradd.sh
+id vbirduser1
+#uid=501(vbirduser1) gid=502(vbirduser1) groups=502(vbirduser1),501(vbirdgroup) 
