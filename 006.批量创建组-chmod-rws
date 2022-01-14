@@ -1,0 +1,53 @@
+#!/bin/bash
+
+############################——》批量创建用户，并指定组
+cat > 006useradd.sh << EOF
+#!/bin/bash
+groupadd vbirdgroup
+for username in vbirduser1 vbirduser2 vbirduser3 vbirduser4 vbirduser5
+do
+	useradd -G vbirdgroup $username
+	echo "password" | passwd --stdin $username
+done
+EOF
+
+bash 006useradd.sh
+id vbirduser1
+#uid=501(vbirduser1) gid=502(vbirduser1) groups=502(vbirduser1),501(vbirdgroup) 
+
+############################——》chmod 2770 为文件创建特殊权限（rws权限属于全组，不属于创建者本人）
+mkdir /home/vbirdgroup
+chgrp vbirdgroup /home/vbirdgroup
+#change group
+#root 权限改为 mkdir /home/vbirdgroup
+ls -ld /home/vbirdgroup
+#drwxr-xr-x 2 root vbirdgroup 4096 Jan 14 20:26 /home/vbirdgroup
+
+chmod 2770 /home/vbirdgroup
+#chmod 2770，前面2是隐藏权限是sgid，代表给目录设置rwx rwxs - - -权限，
+#隐藏权限：SUID（4）、SGID（2）、SBIT（1）
+#rws（1、所有者）rws（2、所属组）rwt（3、其他用户）
+#1：即使不是文件所有者也可以暂时拥有文件所有者的权利
+#2、在拥有这个属性的目录内创建的东西，所属组都属于这个目录的所属组，不属于创建人本身。
+#3、在拥有这个属性的目录内创建的东西，除了root和创建者本身，谁都不能删
+
+ll -d /home/vbirdgroup
+#drwxrws--- 2 root vbirdgroup 4096 Jan 14 20:26 /home/vbirdgroup
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
