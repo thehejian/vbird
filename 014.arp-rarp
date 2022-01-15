@@ -1,0 +1,26 @@
+ARP (Address Resolution Protocol, 網路位址解析) 協定
+RARP (Revers ARP, 反向網路位址解析)
+
+如何取得自己本機的網卡卡號 (MAC)
+[root@hejian ~]# ifconfig eth0
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.17.0.14  netmask 255.255.240.0  broadcast 172.17.15.255
+        inet6 fe80::5054:ff:fecb:9f92  prefixlen 64  scopeid 0x20<link>
+        ether 52:54:00:cb:9f:92  txqueuelen 1000  (Ethernet)
+        RX packets 56341438  bytes 13023415726 (12.1 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 58029782  bytes 69045351007 (64.3 GiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+[root@hejian ~]# arp -n
+Address                  HWtype  HWaddress           Flags Mask            Iface
+172.18.0.2               ether   02:42:ac:12:00:02   C                     docker0
+172.17.0.1               ether   fe:ee:00:2e:16:9a   C                     eth0
+172.18.0.3               ether   02:42:ac:12:00:03   C                     docker0
+
+[root@www ~]# arp -[nd] hostname
+[root@www ~]# arp -s hostname(IP) Hardware_address
+選項與參數：
+-n ：將主機名稱以 IP 的型態顯示
+-d ：將 hostname 的 hardware_address 由 ARP table 當中刪除掉
+-s ：設定某個 IP 或 hostname 的 MAC 到 ARP table 當中
