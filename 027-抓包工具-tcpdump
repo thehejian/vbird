@@ -1,0 +1,114 @@
+[root@www ~]# tcpdump [-AennqX] [-i 介面] [-w 儲存檔名] [-c 次數] \
+                      [-r 檔案] [所欲擷取的封包資料格式]
+選項與參數：
+-A ：封包的內容以 ASCII 顯示，通常用來捉取 WWW 的網頁封包資料。
+-e ：使用資料連接層 (OSI 第二層) 的 MAC 封包資料來顯示；
+-nn：直接以 IP 及 port number 顯示，而非主機名與服務名稱
+-q ：僅列出較為簡短的封包資訊，每一行的內容比較精簡
+-X ：可以列出十六進位 (hex) 以及 ASCII 的封包內容，對於監聽封包內容很有用
+-i ：後面接要『監聽』的網路介面，例如 eth0, lo, ppp0 等等的介面；
+-w ：如果你要將監聽所得的封包資料儲存下來，用這個參數就對了！後面接檔名
+-r ：從後面接的檔案將封包資料讀出來。那個『檔案』是已經存在的檔案，
+     並且這個『檔案』是由 -w 所製作出來的。
+-c ：監聽的封包數，如果沒有這個參數， tcpdump 會持續不斷的監聽，
+     直到使用者輸入 [ctrl]-c 為止。
+所欲擷取的封包資料格式：我們可以專門針對某些通訊協定或者是 IP 來源進行封包擷取，
+     那就可以簡化輸出的結果，並取得最有用的資訊。常見的表示方法有：
+     'host foo', 'host 127.0.0.1' ：針對單部主機來進行封包擷取
+     'net 192.168' ：針對某個網域來進行封包的擷取；
+     'src host 127.0.0.1' 'dst net 192.168'：同時加上來源(src)或目標(dst)限制
+     'tcp port 21'：還可以針對通訊協定偵測，如 tcp, udp, arp, ether 等
+     還可以利用 and 與 or 來進行封包資料的整合顯示呢！
+
+<==按下 [ctrl]-c 之後結束
+6680 packets captured              <==捉下來的封包數量
+14250 packets received by filter   <==由過濾所得的總封包數量
+7512 packets dropped by kernel     <==被核心所丟棄的封包     
+
+17:01:47.362139：這個是此封包被擷取的時間，『時:分:秒』的單位；
+IP：透過的通訊協定是 IP ；
+192.168.1.100.22 > ：傳送端是 192.168.1.100 這個 IP，而傳送的 port number 為 22，你必須要瞭解的是，那個大於 (>) 的符號指的是封包的傳輸方向喔！
+192.168.1.101.1937：接收端的 IP 是 192.168.1.101， 且該主機開啟 port 1937 來接收；
+[P.], seq 196:472：這個封包帶有 PUSH 的資料傳輸標誌， 且傳輸的資料為整體資料的 196~472 byte；
+ack 1：ACK 的相關資料
+
+[root@www ~]# tcpdump -i lo -nn
+ 1 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+ 2 listening on lo, link-type EN10MB (Ethernet), capture size 96 bytes
+ 3 11:02:54.253777 IP 127.0.0.1.32936 > 127.0.0.1.22: S 933696132:933696132(0) 
+   win 32767 <mss 16396,sackOK,timestamp 236681316 0,nop,wscale 2>
+ 4 11:02:54.253831 IP 127.0.0.1.22 > 127.0.0.1.32936: S 920046702:920046702(0) 
+   ack 933696133 win 32767 <mss 16396,sackOK,timestamp 236681316 236681316,nop,
+   wscale 2>
+ 5 11:02:54.253871 IP 127.0.0.1.32936 > 127.0.0.1.22: . ack 1 win 8192 <nop,
+   nop,timestamp 236681316 236681316>
+ 6 11:02:54.272124 IP 127.0.0.1.22 > 127.0.0.1.32936: P 1:23(22) ack 1 win 8192 
+   <nop,nop,timestamp 236681334 236681316>
+ 7 11:02:54.272375 IP 127.0.0.1.32936 > 127.0.0.1.22: . ack 23 win 8192 <nop,
+   nop,timestamp 236681334 236681334>
+ 第 3 行顯示的是『來自 client 端，帶有 SYN 主動連線的封包』，
+第 4 行顯示的是『來自 server 端，除了回應 client 端之外(ACK)，還帶有 SYN 主動連線的標誌；
+第 5 行則顯示 client 端回應 server 確定連線建立 (ACK)
+第 6 行以後則開始進入資料傳輸的步驟。
+
+tcpdump -i eth0 -nn -X 'port 22'
+-X ：可以列出十六進位 (hex) 以及 ASCII 的封包內容，對於監聽封包內容很有用
+        0x0ac0:  4e1b d1c1 72f0 795e 56fa ba72 c6dd 9325  N...r.y^V..r...%
+        0x0ad0:  6cb6 a508 6a50 531e 235f 7142 aff8 a0a7  l...jPS.#_qB....
+        0x0ae0:  bfd3 88a9 2490 6df0 c7cb 02c9 6a3c 9371  ....$.m.....j<.q
+        0x0af0:  beea 157d e688 f495 ad05 3fc7 ef65 c97a  ...}......?..e.z
+        0x0b00:  38b6 0648 7523 b647 7ff3 8348 cc67 3352  8..Hu#.G...H.g3R
+        0x0b10:  6b07 76a4 553e 1c63 a1b4 92c9 e40b f8eb  k.v.U>.c........
+        0x0b20:  0df7 7f9d 089b 566a b437 6c90            ......Vj.7l.
+
+227 packets captured
+672 packets received by filter
+383 packets dropped by kernel
+
+如何使用 tcpdump 監聽 (1)來自 eth0 介面卡且 (2)通訊協定為 port 22 ，(3)封包來源為 192.168.1.101 的封包資料？
+答：
+tcpdump -i eth0 -nn 'port 22 and src host 192.168.1.101'
+
+
+
+
+
+
+
+
+
+
+
+
+
+[root@hejian ~]# tcpdump -nn -i eth0 port 22
+14:30:51.717126 IP 172.17.0.14.22 > 222.90.131.177.21359: Flags [P.], seq 214432:214656, ack 65, win 271, options [nop,nop,TS val 1068454913 ecr 3180352952], length 224
+14:30:51.717160 IP 172.17.0.14.22 > 222.90.131.177.21359: Flags [P.], seq 214656:214880, ack 65, win 271, options [nop,nop,TS val 1068454913 ecr 3180352952], length 224
+14:30:51.750339 IP 222.90.131.177.21359 > 172.17.0.14.22: Flags [P.], seq 65:129, ack 213152, win 3195, options [nop,nop,TS val 3180352985 ecr 1068454880], length 64
+14:30:51.750378 IP 172.17.0.14.22 > 222.90.131.177.21359: Flags [.], ack 129, win 271, options [nop,nop,TS val 1068454946 ecr 3180352985], length 0
+^C
+1004 packets captured
+1004 packets received by filter
+0 packets dropped by kernel
+
+[root@hejian ~]# tcpdump -nn -i eth0
+14:26:10.590172 IP 172.17.0.14.22 > 222.90.131.177.21359: Flags [P.], seq 685616:685840, ack 129, win 271, options [nop,nop,TS val 1068173786 ecr 3180071814], length 224
+14:26:10.590208 IP 172.17.0.14.22 > 222.90.131.177.21359: Flags [P.], seq 685840:686064, ack 129, win 271, options [nop,nop,TS val 1068173786 ecr 3180071814], length 224
+14:26:10.590246 IP 172.17.0.14.22 > 222.90.131.177.21359: Flags [P.], seq 686064:686288, ack 129, win 271, options [nop,nop,TS val 1068173786 ecr 3180071814], length 224
+14:26:10.609903 IP 222.90.131.177.21359 > 172.17.0.14.22: Flags [P.], seq 129:193, ack 684560, win 3195, options [nop,nop,TS val 3180071833 ecr 1068173751], length 64
+^C
+3297 packets captured
+3297 packets received by filter
+0 packets dropped by kernel
+
+
+
+
+
+
+
+
+
+
+
+
