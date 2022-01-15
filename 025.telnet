@@ -1,0 +1,32 @@
+[root@www ~]# telnet [host|IP [port]]
+
+# 範例一：連結到台灣相當熱門的 PTT BBS 站 ptt.cc
+[root@www ~]# yum install telnet  <==預設沒有安裝這軟體
+[root@www ~]# telnet ptt.cc
+
+偵測本機端的 110 這個 port 是否正確啟動？
+[root@www ~]# telnet localhost 110
+
+
+
+
+
+
+
+
+
+
+[root@hejian ~]# telnet localhost 25
+Trying ::1...
+telnet: connect to address ::1: Connection refused
+Trying 127.0.0.1...
+telnet: connect to address 127.0.0.1: Connection refused
+
+[root@hejian ~]# telnet localhost 110
+Trying ::1...
+telnet: connect to address ::1: Connection refused
+Trying 127.0.0.1...
+telnet: connect to address 127.0.0.1: Connection refused
+
+[root@hejian ~]# telnet ptt.cc
+Trying 74.86.228.110...
