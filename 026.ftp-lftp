@@ -1,0 +1,74 @@
+[root@www ~]# ftp [host|IP] [port]
+
+# 範例一：連線到崑山科大去看看
+[root@www ~]# yum install ftp
+[root@www ~]# ftp ftp.ksu.edu.tw
+
+#############################################################_>lftp
+[root@www ~]# lftp [-p port] [-u user[,pass]] [host|IP]
+[root@www ~]# lftp -f filename
+[root@www ~]# lftp -c "commands"
+選項與參數：
+-p  ：後面可以直接接上遠端 FTP 主機提供的 port
+-u  ：後面則是接上帳號與密碼，就能夠連接上遠端主機了
+      如果沒有加帳號密碼， lftp 預設會使用 anonymous 嘗試匿名登入
+-f  ：可以將指令寫入腳本中，這樣可以幫助進行 shell script 的自動處理喔！
+-c  ：後面直接加上所需要的指令。
+
+# 範例一：利用 lftp 登入崑山科大的 FTP 伺服器
+[root@www ~]# yum install lftp
+[root@www ~]# lftp ftp.ksu.edu.tw
+lftp ftp.ksu.edu.tw:~>  
+# 瞧！一下子就登入了！很快樂吧！ ^_^！你同樣可使用 help 去查閱相關內部指令
+
+###########################################################_>自动化脚本
+# 使用檔案配合 lftp 去處理時：
+[root@www ~]# mkdir lftp; cd lftp
+[root@www lftp]# vim lftp.ksu.sh
+open ftp.ksu.edu.tw
+cd /pub/CentOS/
+mget -c -d RPM-GPG*
+bye
+[root@www lftp]# lftp -f lftp.ksu.sh
+[root@www lftp]# ls
+lftp.ksu.sh      RPM-GPG-KEY-CentOS-3 RPM-GPG-KEY-CentOS-4 RPM-GPG-KEY-CentOS-6
+RPM-GPG-KEY-beta RPM-GPG-KEY-centos4  RPM-GPG-KEY-CentOS-5 
+
+# 直接將要處理的動作加入 lftp 指令中
+[root@www lftp]# vim lftp.ksu.sh
+lftp -c "open ftp.ksu.edu.tw
+cd /pub/CentOS/
+mget -c -d RPM-GPG*
+bye"
+[root@www lftp]# sh lftp.ksu.sh
+
+
+
+
+
+
+
+Connected to ftp.ksu.edu.tw (120.114.150.21).
+220---------- Welcome to Pure-FTPd [privsep] ----------
+220-You are user number 1 of 50 allowed.
+220-Local time is now 16:25. Server port: 21.
+220-Only anonymous FTP is allowed here  <==訊息要看啊！這個 FTP 僅支援匿名
+220-IPv6 connections are also welcome on this server.
+220 You will be disconnected after 5 minutes of inactivity.
+Name (ftp.ksu.edu.tw:root): anonymous  <==鳥哥這裡用匿名登入！
+230 Anonymous user logged in            <==嗯！確實是匿名登入了！
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp>                <==最終登入的結果看起來是這樣！
+ftp> help           <==提供需要的指令說明，可以常參考！
+ftp> dir            <==顯示遠端伺服器的目錄內容 (檔名列表)
+ftp> cd /pub        <==變換目錄到 /pub 當中
+ftp> get filename   <==下載單一檔案，檔名為 filename 
+ftp> mget filename* <==下載多個檔案，可使用萬用字元 *
+ftp> put filename   <==上傳 filename 這個檔案到伺服器上
+ftp> delete file    <==刪除主機上的 file 這個檔案
+ftp> mkdir dir      <==建立 dir 這個目錄
+ftp> lcd /home      <==切換『本地端主機』的工作目錄
+ftp> passive        <==啟動或關閉 passive 模式
+ftp> binary         <==資料傳輸模式設定為 binary 格式
+ftp> bye            <==結束 ftp 軟體的使用
