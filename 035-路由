@@ -1,0 +1,129 @@
+
+# 1. 再看看 eth0 的設定吧！雖然我們已經在第四章就搞定了：
+[root@www ~]# vim /etc/sysconfig/network-scripts/ifcfg-eth0
+DEVICE="eth0"
+HWADDR="08:00:27:71:85:BD"
+NM_CONTROLLED="no"
+ONBOOT="yes"
+BOOTPROTO=none
+IPADDR=192.168.1.100
+NETMASK=255.255.255.0
+GATEWAY=192.168.1.254   <==最重要的設定啊！透過這部主機連出去的！
+
+# 2. 再處理 eth1 這張之前一直都沒有驅動的網路卡吧！
+[root@www ~]# vim /etc/sysconfig/network-scripts/ifcfg-eth1
+DEVICE="eth1"
+HWADDR="08:00:27:2A:30:14"
+NM_CONTROLLED="no"
+ONBOOT="yes"
+BOOTPROTO="none"
+IPADDR=192.168.100.254
+NETMASK=255.255.255.0
+
+# 3. 啟動 IP 轉遞，真的來實作成功才行！
+[root@www ~]# vim /etc/sysctl.conf
+net.ipv4.ip_forward = 1
+# 找到上述的設定值，將預設值 0 改為上述的 1 即可！儲存後離開去！
+[root@www ~]# sysctl -p
+[root@www ~]# cat /proc/sys/net/ipv4/ip_forward
+1   <==這就是重點！要是 1 才可以呦！
+
+# 4. 重新啟動網路，並且觀察路由與 ping Router A
+[root@www ~]# /etc/init.d/network restart
+[root@www ~]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.100.0   0.0.0.0         255.255.255.0   U     0      0        0 eth1
+192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 eth0
+0.0.0.0         192.168.1.254   0.0.0.0         UG    0      0        0 eth0
+# 上面的重點在於最後面那個路由器的設定是否正確呦！
+
+[root@www ~]# ping -c 2 192.168.1.254
+PING 192.168.1.254 (192.168.1.254) 56(84) bytes of data.
+64 bytes from 192.168.1.254: icmp_seq=1 ttl=64 time=0.294 ms
+64 bytes from 192.168.1.254: icmp_seq=2 ttl=64 time=0.119 ms <==有回應即可
+
+# 5. 暫時關閉防火牆！這一步也很重要喔！
+[root@www ~]# /etc/init.d/iptables stop
+
+###################################################################################_>DNS的另一种配置
+[root@clientlinux ~]# vim /etc/sysconfig/network-scripts/ifcfg-eth0
+DEVICE="eth0"
+NM_CONTROLLED="no"
+ONBOOT="yes"
+BOOTPROTO=none
+IPADDR=192.168.100.10
+NETMASK=255.255.255.0
+GATEWAY=192.168.100.254  <==這個設定最重要啦！
+DNS1=168.95.1.1          <==有這個就不用自己改 /etc/resolv.conf
+
+[root@clientlinux ~]# /etc/init.d/network restart
+[root@clientlinux ~]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.100.0   0.0.0.0         255.255.255.0   U     1      0        0 eth0
+169.254.0.0     0.0.0.0         255.255.0.0     U     1002   0        0 eth0
+0.0.0.0         192.168.100.254 0.0.0.0         UG    0      0        0 eth0
+
+[root@clientlinux ~]# ping -c 2 192.168.100.254 <==ping自己的gateway(會成功)
+[root@clientlinux ~]# ping -c 2 192.168.1.254   <==ping外部的gateway(會失敗)
+
+
+###################################################################################_>路由规则
+#临时规则，立即生效
+[root@routera ~]# route add -net 192.168.100.0 netmask 255.255.255.0 \
+>  gw 192.168.1.100
+
+#永久规则
+[root@routera ~]# vim /etc/sysconfig/network-scripts/route-eth0
+192.168.100.0/24 via 192.168.1.100 dev eth0
+目標網域             透過的gateway     裝置
+
+[root@routera ~]# route -n
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+120.114.142.0   0.0.0.0         255.255.255.0   U     0      0        0 eth1
+192.168.100.0   192.168.1.100   255.255.255.0   UG    0      0        0 eth0
+192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 eth0
+169.254.0.0     0.0.0.0         255.255.0.0     U     0      0        0 eth1
+0.0.0.0         120.114.142.254 0.0.0.0         UG    0      0        0 eth1
+
+如果你的 Linux Router 有設定防火牆的話， 而且還有設定類似 NAT 主機的 IP 偽裝技術，那可得特別留意，因為還可能會造成路由誤判的問題
+
+
+
+
+
+
+
+
+
+
+
+
+
+核心的封包轉遞 (IP forward) 功能
+[root@www ~]# cat /proc/sys/net/ipv4/ip_forward
+0  <== 0 代表沒有啟動， 1 代表啟動了
+
+#临时生效
+echo 1 > /proc/sys/net/ipv4/ip_forward
+#永久生效
+[root@www ~]# vim /etc/sysctl.conf
+# 將底下這個設定值修改正確即可！ (本來值為 0 ，將它改為 1 即可)
+net.ipv4.ip_forward = 1
+[root@www ~]# sysctl -p  <==立刻讓該設定生效
+
+
+[root@VM-0-14-centos ~]# cat /etc/sysconfig/network-scripts/ifcfg-eth0
+# Created by cloud-init on instance boot automatically, do not edit.
+#
+BOOTPROTO=dhcp
+DEVICE=eth0
+HWADDR=52:54:00:cb:9f:92
+ONBOOT=yes
+PERSISTENT_DHCLIENT=yes
+TYPE=Ethernet
+USERCTL=no
+
+[root@VM-0-14-centos ~]# cat /proc/sys/net/ipv4/ip_forward
+0
