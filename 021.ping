@@ -1,0 +1,67 @@
+[root@www ~]# ping [選項與參數] IP
+選項與參數：
+-c 數值：後面接的是執行 ping 的次數，例如 -c 5 ；
+-n     ：在輸出資料時不進行 IP 與主機名稱的反查，直接使用 IP 輸出(速度較快)；
+-s 數值：發送出去的 ICMP 封包大小，預設為 56bytes，不過你可以放大此一數值；
+-t 數值：TTL 的數值，預設是 255，每經過一個節點就會少一；
+-W 數值：等待回應對方主機的秒數。
+-M [do|dont] ：主要在偵測網路的 MTU 數值大小，兩個常見的項目是：
+   do  ：代表傳送一個 DF (Don't Fragment) 旗標，讓封包不能重新拆包與打包；
+   dont：代表不要傳送 DF 旗標，表示封包可以在其他主機上拆包與打包
+64 bytes：表示這次傳送的 ICMP 封包大小為 64 bytes 這麼大，這是預設值， 在某些特殊場合中，例如要搜索整個網路內最大的 MTU 時，可以使用 -s 2000 之類的數值來取代；
+
+icmp_seq=1：ICMP 所偵測進行的次數，第一次編號為 1 ；
+
+ttl=243：TTL 與 IP 封包內的 TTL 是相同的，每經過一個帶有 MAC 的節點 (node) 時，例如 router, bridge 時， TTL 就會減少一，預設的 TTL 為 255 ， 你可以透過 -t 150 之類的方法來重新設定預設 TTL 數值；
+
+time=15.4 ms：回應時間，單位有 ms(0.001秒)及 us(0.000001秒)， 一般來說，越小的回應時間，表示兩部主機之間的網路連線越良好！
+cat > 021ping_test.sh << EOF
+#!/bin/bash
+for siteip in $(seq 1 254)
+do
+	site="192.168.1.${siteip}"
+	ping -c1 -W1 ${site} &> /dev/null
+	if [ "$?" == "0" ]; then
+		echo "$site is UP"
+	else
+		echo "$site is DOWN"
+	fi
+done
+EOF
+
+bash 21ping_test.sh
+
+找出最大的 MTU 數值
+[root@www ~]# ping -c 2 -s 1000 -M do 192.168.1.254
+PING 192.168.1.254 (192.168.1.254) 1000(1028) bytes of data.
+1008 bytes from 192.168.1.254: icmp_seq=1 ttl=64 time=0.311 ms
+# 如果有回應，那就是可以接受這個封包，如果無回應，那就表示這個 MTU 太大了。
+
+[root@www ~]# ping -c 2 -s 8000 -M do 192.168.1.254
+PING 192.168.1.254 (192.168.1.254) 8000(8028) bytes of data.
+From 192.168.1.100 icmp_seq=1 Frag needed and DF set (mtu = 1500)
+# 這個錯誤訊息是說，本地端的 MTU 才到 1500 而已，你要偵測 8000 的 MTU
+# 根本就是無法達成的！那要如何是好？用前一小節介紹的 ip link 來進行 MTU 設定吧！
+
+網路介面	MTU
+Ethernet	1500
+PPPoE	1492
+Dial-up(Modem)	576
+
+
+
+
+
+   
+   
+   
+   
+[root@hejian ~]# ping -c 3 1.116.26.230
+PING 1.116.26.230 (1.116.26.230) 56(84) bytes of data.
+64 bytes from 1.116.26.230: icmp_seq=1 ttl=63 time=0.350 ms
+64 bytes from 1.116.26.230: icmp_seq=2 ttl=63 time=0.332 ms
+64 bytes from 1.116.26.230: icmp_seq=3 ttl=63 time=0.660 ms
+
+--- 1.116.26.230 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 1999ms
+rtt min/avg/max/mdev = 0.332/0.447/0.660/0.151 ms   
