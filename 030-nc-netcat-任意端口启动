@@ -1,0 +1,42 @@
+[root@www ~]# nc [-u] [IP|host] [port]
+[root@www ~]# nc -l [IP|host] [port]
+選項與參數：
+-l ：作為監聽之用，亦即開啟一個 port 來監聽用戶的連線；
+-u ：不使用 TCP 而是使用 UDP 作為連線的封包狀態
+
+# 範例一：與 telnet 類似，連接本地端的 port 25 查閱相關訊息
+[root@www ~]# yum install nc
+[root@www ~]# nc localhost 25
+
+# 範例二：啟動一個 port 20000 來監聽使用者的連線要求
+[root@www ~]# nc -l localhost 20000 &
+[root@www ~]# netstat -tlunp | grep nc
+tcp        0      0 ::1:20000        :::*     LISTEN      5433/nc
+# 啟動一個 port 20000  在本機上！
+
+[root@hejian ~]# nc -l localhost 20000&
+[4] 2964
+[root@hejian ~]# netstat -lntpu | grep 20000
+tcp6       0      0 ::1:20000               :::*                    LISTEN      2964/nc
+
+nc localhost 20000
+   <==這裡可以開始輸入字串了！
+此時，在用戶端我們可以打入一些字，你會發現在伺服器端會同時出現你輸入的字眼吶！ 如果你同時給予一些額外的參數，例如利用標準輸入與輸出 (stdout, stdin) 的話，那麼就可以透過這個連線來作很多事情了！ 當然 nc 的功能不只如此，你還可以發現很多的用途喔！ 請自行到你主機內的 /usr/share/doc/nc-1.84/scripts/ 目錄下看看這些 script ，有幫助的吶！ 不過，如果你需要額外的編譯出含有 GAPING_SECURITY_HOLE 功能， 以使兩端連線可以進行額外指令的執行時，就得要自行下載原始碼來編譯了！
+
+
+
+
+
+
+
+
+
+[root@hejian ~]# nc localhost 25
+Ncat: Connection refused.
+[root@hejian ~]# nc localhost 21
+Ncat: Connection refused.
+
+
+
+
+
