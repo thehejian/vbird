@@ -1,0 +1,87 @@
+##################################################################################_>links
+[root@www ~]# links [options] [URL]
+選項與參數：
+-anonymous [0|1]：是否使用匿名登入的意思；
+-dump [0|1]     ：是否將網頁的資料直接輸出到 standard out 而非 links 軟體功能
+-dump_charset   ：後面接想要透過 dump 輸出到螢幕的語系編碼，big5 使用 cp950 喔
+
+# 範例一：瀏覽 Linux kernel 網站
+[root@www ~]# links http://www.kernel.org
+
+# 透過 links 將 tw.yahoo.com 的網頁內容整個抓下來儲存
+[root@www ~]# links -dump http://tw.yahoo.com > yahoo.html
+
+# 某個網站透過 GET 功能可以上傳帳號為 user 密碼為 pw ，用文字介面處理為：
+[root@www ~]# links -dump \
+> http://some.site.name/web.php?name=user&password=pw > testfile
+
+##################################################################################_>wget
+[root@www ~]# wget [option] [網址]
+選項與參數：
+若想要連線的網站有提供帳號與密碼的保護時，可以利用這兩個參數來輸入喔！
+--http-user=usrname
+--http-password=password
+--quiet ：不要顯示 wget 在抓取資料時候的顯示訊息
+更多的參數請自行參考 man wget 吧！ ^_^
+
+# 範例一：請下載 2.6.39 版的核心
+[root@www ~]# wget  \
+> http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.39.tar.bz2
+--2011-07-18 16:58:26--  http://www.kernel.org/pub/linux/kernel/v2.6/..
+Resolving www.kernel.org... 130.239.17.5, 149.20.4.69, 149.20.20.133, ...
+Connecting to www.kernel.org|130.239.17.5|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 76096559 (73M) [application/x-bzip2]
+Saving to: `linux-2.6.39.tar.bz2'
+
+88% [================================>        ] 67,520,536  1.85M/s  eta 7s
+
+#wget的代理服务器
+[root@www ~]# vim /etc/wgetrc
+#http_proxy = http://proxy.yoyodyne.com:18023/  <==找到底下這幾行，大約在 78 行
+#ftp_proxy = http://proxy.yoyodyne.com:18023/
+#use_proxy = on
+
+# 將他改成類似底下的模樣，記得，你必須要有可接受的 proxy 主機才行！
+http_proxy = http://proxy.ksu.edu.tw:3128/
+use_proxy = on
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
