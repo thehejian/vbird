@@ -1,0 +1,2 @@
+[root@www ~]# yum install wireshark wireshark-gnome
+
