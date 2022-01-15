@@ -1,0 +1,74 @@
+[root@www ~]# ifconfig {interface} {up|down}  <== 觀察與啟動介面
+[root@www ~]# ifconfig interface {options}    <== 設定與修改介面
+選項與參數：
+interface：網路卡介面代號，包括 eth0, eth1, ppp0 等等
+options  ：可以接的參數，包括如下：
+    up, down ：啟動 (up) 或關閉 (down) 該網路介面(不涉及任何參數)
+    mtu      ：可以設定不同的 MTU 數值，例如 mtu 1500 (單位為 byte)
+    netmask  ：就是子遮罩網路；
+    broadcast：就是廣播位址啊！
+
+eth0：就是網路卡的代號，也有 lo 這個 loopback ；
+HWaddr：就是網路卡的硬體位址，俗稱的 MAC 是也；
+inet addr：IPv4 的 IP 位址，後續的 Bcast, Mask 分別代表的是 Broadcast 與 netmask 喔！
+inet6 addr：是 IPv6 的版本的 IP ，我們沒有使用，所以略過；
+MTU：就是第二章談到的 MTU 啊！
+RX：那一行代表的是網路由啟動到目前為止的封包接收情況， packets 代表封包數、errors 代表封包發生錯誤的數量、 dropped 代表封包由於有問題而遭丟棄的數量等等
+TX：與 RX 相反，為網路由啟動到目前為止的傳送情況；
+collisions：代表封包碰撞的情況，如果發生太多次， 表示你的網路狀況不太好；
+txqueuelen：代表用來傳輸資料的緩衝區的儲存長度；
+RX bytes, TX bytes：總接收、傳送的位元組總量
+
+[root@hejian ~]# ifconfig eth0
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.17.0.14  netmask 255.255.240.0  broadcast 172.17.15.255
+        inet6 fe80::5054:ff:fecb:9f92  prefixlen 64  scopeid 0x20<link>
+        ether 52:54:00:cb:9f:92  txqueuelen 1000  (Ethernet)
+        RX packets 56376560  bytes 13026789294 (12.1 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 58062467  bytes 69050925242 (64.3 GiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+暫時修改網路介面，給予 eth0 一個 192.168.100.100/24 的參數
+[root@www ~]# ifconfig eth0 192.168.100.100
+# 如果不加任何其他參數，則系統會依照該 IP 所在的 class 範圍，自動的計算出
+# netmask 以及 network, broadcast 等 IP 參數，若想改其他參數則：
+
+[root@www ~]# ifconfig eth0 192.168.100.100 \
+> netmask 255.255.255.128 mtu 8000 
+# 設定不同參數的網路介面，同時設定 MTU 的數值！
+
+[root@www ~]# ifconfig eth0 mtu 9000
+# 僅修改該介面的 MTU 數值，其他的保持不動！
+
+[root@www ~]# ifconfig eth0:0 192.168.50.50
+# 仔細看那個介面是 eth0:0 喔！那就是在該實體網卡上，再模擬一個網路介面，
+# 亦即是在一張網路卡上面設定多個 IP 的意思啦！
+
+[root@www ~]# ifup   {interface}
+[root@www ~]# ifdown {interface}
+
+[root@www ~]# ifup eth0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
