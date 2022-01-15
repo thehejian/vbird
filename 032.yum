@@ -1,0 +1,216 @@
+[root@www ~]# yum [option] [查詢的工作項目] [相關參數]
+選項與參數：
+option：主要的參數，包括有：
+   -y ：當 yum 詢問使用者的意見時，主動回答 yes 而不需要由鍵盤輸入；
+
+[查詢的工作項目]：由於不同的使用條件，而有一些選擇的項目，包括：
+   install ：指定安裝的軟體名稱，所以後面需接『 軟體名稱 』
+   update  ：進行整體升級的行為；當然也可以接某個軟體，僅升級一個軟體；
+   remove  ：移除某個軟體，後面需接軟體名稱；
+   search  ：搜尋某個軟體或者是重要關鍵字；
+   list    ：列出目前 yum 所管理的所有的軟體名稱與版本，有點類似 rpm -qa；
+   info    ：同上，不過有點類似 rpm -qai 的執行結果；
+   clean   ：下載的檔案被放到 /var/cache/yum ，可使用 clean 將他移除，
+             可清除的項目：packages | headers | metadata | cache 等；
+
+在[查詢的工作項目]部分還可以具有整個群組軟體的安裝方式，如下所示：
+   grouplist   ：列出所有可使用的『軟體群組』，例如 Development Tools 之類的；
+   groupinfo   ：後面接 group_name，則可瞭解該 group 內含的所有軟體名；
+   groupinstall：這個好用！可以安裝一整組的軟體群組，相當的不錯用！
+                 更常與 --installroot=/some/path 共用來安裝新系統
+   groupremove ：移除某個軟體群組；
+   
+搜尋 CentOS 官網提供的軟體名稱是否有與 RAID 有關的？
+[root@www ~]# yum search raid
+
+上述輸出結果中， mdadm 的功能為何？
+[root@www ~]# yum info mdadm
+
+yum 安裝軟體群組
+查詢系統有的軟體群組有多少個？
+[root@www ~]# LANG=C yum grouplist
+Installed Groups:             <==這個是已安裝的軟體群組
+   Additional Development
+   Arabic Support
+   Armenian Support
+   Base
+....(中間省略)....
+Available Groups:             <==這個是尚可安裝的軟體群組
+   Afrikaans Support
+   Albanian Support
+   Amazigh Support
+....(中間省略)....
+   Desktop Platform
+   Desktop Platform Development
+....(後面省略)....
+
+# 範例五：那麼 Desktop Platform 內含多少個 RPM 軟體呢？
+[root@www ~]# yum groupinfo "Desktop Platform"
+Group: 桌面環境平台
+ Description: 受支援的 CentOS Linux 桌面平台函式庫。
+ Mandatory Packages: <==主要的會被安裝的軟體有這些
+   atk
+....(中間省略)....
+ Optional Packages:  <==額外可選擇的軟體是這些
+   qt-mysql
+....(底下省略)....
+# 如果你確定要安裝這個軟體群組的話，那就這樣做：
+
+[root@www ~]# yum groupinstall "Desktop Platform"
+# 因為這裡在介紹伺服器的環境，所以上面的動作鳥哥是按下 n 來拒絕安裝的！
+
+#定时更新系统
+vim /etc/crontab 來進行指令的說明。 其實內容很簡單：
+40 5 * * * root yum -y update && yum clean packages
+這樣就可以自動更新了， 時間訂在每天的凌晨 5:40
+
+#修改yum源
+[root@www ~]# vim /etc/yum.repos.d/CentOS-Base.repo
+[base]
+name=CentOS-$releasever - Base
+mirrorlist=http://mirrorlist.centos.org/?release=$releasever&arch=$basearch&repo=os
+#baseurl=http://mirror.centos.org/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+[base]：
+代表容器的名字！中刮號一定要存在，裡面的名稱則可以隨意取。但是不能有兩個相同的容器名稱，否則 yum 會不曉得該到哪裡去找容器相關軟體清單檔案。
+
+name：
+只是說明一下這個容器的意義而已，重要性不高！
+
+mirrorlist=：
+列出這個容器可以使用的映射站台，如果不想使用，可以註解到這行。由於等一下我們是直接設定映射站， 因此這行待會兒確實是需要註解掉的喔！
+
+baseurl=：
+這個最重要，因為後面接的就是容器的實際網址！ mirrorlist 是由 yum 程式自行去捉映射站台， baseurl 則是指定固定的一個容器網址！我們剛剛找到的網址放到這裡來啦！
+
+enable=1：
+就是讓這個容器被啟動。如果不想啟動可以使用 enable=0 喔！
+
+gpgcheck=1：
+還記得 RPM 的數位簽章嗎？這就是指定是否需要查閱 RPM 檔案內的數位簽章！
+
+gpgkey=：就是數位簽章的公鑰檔所在位置！使用預設值即可
+
+[root@www ~]# vim /etc/yum.repos.d/CentOS-Base.repo
+[base]
+name=CentOS-$releasever - Base
+baseurl=http://ftp.twaren.net/Linux/CentOS/6/os/x86_64/   <==就屬它最重要！
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+# 底下其他的容器項目，請自行到高速網路中心去查詢後自己處理！
+
+[root@www ~]# yum clean all  <==改過設定檔，最好清除既有清單
+
+列出目前 yum server 所使用的容器有哪些？
+[root@www ~]# yum repolist all
+
+[root@www ~]# yum clean [packages|headers|all] 
+選項與參數：
+ packages：將已下載的軟體檔案刪除
+ headers ：將下載的軟體檔頭刪除
+ all     ：將所有容器資料都刪除！
+
+# 範例：刪除已下載過的所有容器的相關資料 (含軟體本身與清單)
+[root@www ~]# yum clean all
+
+
+
+
+
+
+
+[root@hejian ~]# yum list nginx
+Loaded plugins: fastestmirror, langpacks, product-id, search-disabled-repos, subscription-manager
+
+This system is not registered with an entitlement server. You can use subscription-manager to register.
+
+Loading mirror speeds from cached hostfile
+ * epel: ftp.iij.ad.jp
+Available Packages
+nginx.x86_64                                                        1:1.20.1-9.el7                                                        epel
+[root@hejian ~]# LANG=C yum grouplist
+Loaded plugins: fastestmirror, langpacks, product-id, search-disabled-repos, subscription-manager
+
+This system is not registered with an entitlement server. You can use subscription-manager to register.
+
+There is no installed groups file.
+Maybe run: yum groups mark convert (see man yum)
+Loading mirror speeds from cached hostfile
+ * epel: hk.mirrors.thegigabit.com
+Available Environment Groups:
+   Minimal Install
+   Compute Node
+   Infrastructure Server
+   File and Print Server
+   Cinnamon Desktop
+   MATE Desktop
+   Basic Web Server
+   Virtualization Host
+   Server with GUI
+   GNOME Desktop
+   KDE Plasma Workspaces
+   Development and Creative Workstation
+Available Groups:
+   Cinnamon
+   Compatibility Libraries
+   Console Internet Tools
+   Development Tools
+   Educational Software
+   Electronic Lab
+   Fedora Packager
+   General Purpose Desktop
+   Graphical Administration Tools
+   Haskell
+   LXQt Desktop
+   Legacy UNIX Compatibility
+   MATE
+   Milkymist
+   Scientific Support
+   Security Tools
+   Smart Card Support
+   System Administration Tools
+   System Management
+   TurboGears application framework
+   Xfce
+Done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
