@@ -1,0 +1,21 @@
+
+[root@localhost ~]# useradd student
+[root@localhost ~]# passwd student
+[root@localhost ~]# setfacl -m u:student:rx /home/vbirdgroup
+#-m, --modify=acl        modify the current ACL(s) of file(s)
+[root@localhost ~]# setfacl -m u:vbirduser5:- /home/vbirdgroup
+#vbirduser5无任何权限，不能读写执行
+[root@localhost ~]# getfacl /home/vbirdgroup
+# file: home/vbirdgroup
+# owner: root
+# group: vbirdgroup
+# flags: -s-
+user::rwx
+user:vbirduser5:---
+user:student:r-x     <==就是這兩行，額外的權限參數哩！
+group::rwx
+mask::rwx
+other::---
+
+[root@localhost ~]# ll -d /home/vbirdgroup
+drwxrws---+ 2 root vbirdgroup 4096 2011-07-14 14:49 /home/vbirdgroup
