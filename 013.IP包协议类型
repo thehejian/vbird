@@ -1,0 +1,8 @@
+IP 內的號碼	封包協定名稱(全名)
+1	ICMP (Internet Control Message Protocol)
+2	IGMP (Internet Group Management Protocol)
+3	GGP (Gateway-to-Gateway Protocol)
+4	IP (IP in IP encapsulation)
+6	TCP (Transmission Control Protocol)
+8	EGP (Exterior Gateway Protocol)
+17	UDP (User Datagram Protocol)
