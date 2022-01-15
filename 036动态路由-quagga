@@ -1,0 +1,171 @@
+[root@www ~]# yum install quagga
+[root@www ~]# ls -l /etc/quagga
+-rw-r--r--. 1 root   root      406 Jun 25 20:19 ripd.conf.sample
+-rw-r-----. 1 quagga quagga     26 Jul 22 11:11 zebra.conf
+-rw-r--r--. 1 root   root      369 Jun 25 20:19 zebra.conf.sample
+.....(其他省略).....
+
+zebra 這個 daemon 的功能在更新核心的路由規則；
+RIP 這個 daemon 則是在向附近的其他 Router 溝通協調路由規則的傳送與否。
+
+1. 將所有主機的 IP 設定妥當
+2. 在兩部 Router 上面設定 zebra 
+
+    # 1. 先設定會影響動態路由服務的 zebra 並且啟動 zebra
+    [root@www ~]# vim /etc/quagga/zebra.conf
+    hostname www.centos.vbird           <==給予這個路由器一個主機名稱，隨便取！
+    password linuxz1                    <==給予一個密碼！
+    enable password linuxz1             <==將這個密碼生效！
+    log file /var/log/quagga/zebra.log  <==將所有 zebra 產生的資訊存到登錄檔中
+
+    [root@www ~]# /etc/init.d/zebra start
+    systemctl start zebra
+
+    [root@www ~]# chkconfig zebra on
+    systemctl enable zebra
+    [root@www ~]# netstat -tunlp | grep zebra
+    Active Internet connections (only servers)
+    Proto Recv-Q Send-Q Local Address   Foreign Address   State   PID/Program name
+    tcp        0      0 127.0.0.1:2601  0.0.0.0:*         LISTEN  4409/zebra
+    
+    [root@www ~]# telnet localhost 2601
+Trying 127.0.0.1...
+Connected to localhost.localdomain (127.0.0.1).
+Escape character is '^]'.
+
+Hello, this is Quagga (version 0.99.15).
+Copyright 1996-2005 Kunihiro Ishiguro, et al.
+
+User Access Verification
+
+Password: <==在這裡輸入剛剛你設定的密碼啊！
+www.centos.vbird> ? <==在這邊輸入『 ? 』就能夠知道有多少指令可使用
+  echo      Echo a message back to the vty
+  enable    Turn on privileged mode command
+  exit      Exit current mode and down to previous mode
+  help      Description of the interactive help system
+  list      Print command list
+  quit      Exit current mode and down to previous mode
+  show      Show running system information
+  terminal  Set terminal line parameters
+  who       Display who is on vty
+www.centos.vbird> list <==列出所有可用指令
+  echo .MESSAGE
+....(中間省略)....
+  show debugging zebra
+  show history
+  show interface [IFNAME]
+....(中間省略)....
+  show ip protocol
+  show ip route
+....(其他省略)....
+www.centos.vbird> show ip route
+Codes: K - kernel route, C - connected, S - static, R - RIP, O - OSPF,
+       I - ISIS, B - BGP, > - selected route, * - FIB route
+
+K>* 0.0.0.0/0 via 192.168.1.254, eth0            <==核心直接設定的
+C>* 127.0.0.0/8 is directly connected, lo        <==介面產生的路由
+K>* 169.254.0.0/16 is directly connected, eth1   <==核心直接設定的
+C>* 192.168.1.0/24 is directly connected, eth0   <==介面產生的路由
+C>* 192.168.100.0/24 is directly connected, eth1 <==介面產生的路由
+www.centos.vbird> exit
+Connection closed by foreign host.
+    K ：代表以類似 route 指令加入核心的路由規則，包括 route-ethN 所產生的規則；
+    C ：代表由你的網路介面所設定的 IP 而產生的相關的路由規則
+    S ：以 zebra 功能所設定的靜態路由資訊；
+    R ：就是透過 RIP 協定所增加的路由規則囉！
+
+#新增路由
+[root@www ~]# vim /etc/quagga/zebra.conf
+# 新增底下這一行喔！
+ip route 10.0.0.0/24 eth0
+
+[root@www ~]# /etc/init.d/zebra restart
+[root@www ~]# telnet localhost 2601
+Password: <==這裡輸入密碼
+www.centos.vbird> show ip route
+K>* 0.0.0.0/0 via 192.168.1.254, eth0
+S>* 10.0.0.0/24 [1/0] is directly connected, eth0
+C>* 127.0.0.0/8 is directly connected, lo
+K>* 169.254.0.0/16 is directly connected, eth1
+C>* 192.168.1.0/24 is directly connected, eth0
+C>* 192.168.100.0/24 is directly connected, eth1
+
+#####################################################################################_>兩部 Router 上面設定 ripd 服務
+[root@www ~]# vim /etc/quagga/ripd.conf
+hostname www.centos.vbird           <==這裡是設定 Router 的主機名稱而已
+password linuxz1                    <==設定好你自己的密碼喔！
+debug rip events                    <==可以記錄較多的錯誤訊息！
+debug rip packet                    <==鳥哥透過這個訊息解決很多問題
+router rip                          <==啟動 Router 的 rip 功能
+ version 2                          <==啟動的是 RIPv2 的服務 (預設值)
+ network 192.168.1.0/24             <==這兩個就是我們管理的介面囉！192.168.1.0/24 這個外部區網
+ network 192.168.100.0/24
+interface eth0                      <==針對外部的那個介面，要略過身份驗證的方式
+ no ip rip authentication mode      <==就是這個項目！不要驗證身份！
+log file /var/log/quagga/zebra.log  <==登錄檔設定與 zebra 相同即可
+
+[root@www ~]# /etc/init.d/ripd start
+[root@www ~]# chkconfig ripd on
+[root@www ~]# netstat -tulnp | grep ripd
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address  Foreign Address State   PID/Program name
+tcp        0      0 127.0.0.1:2602 0.0.0.0:*       LISTEN  4456/ripd
+udp        0      0 0.0.0.0:520    0.0.0.0:*               4456/ripd
+# 新版的 quagga 啟動的 2602 僅在 127.0.0.1，是透過 port 520 來傳遞資訊！
+
+檢查 RIP 協定的溝通結果
+[root@www ~]# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.100.0   0.0.0.0         255.255.255.0   U     0      0        0 eth1
+10.0.0.0        0.0.0.0         255.255.255.0   U     0      0        0 eth0
+192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 eth0
+192.168.200.0   192.168.1.200   255.255.255.0   UG    2      0        0 eth0
+0.0.0.0         192.168.1.254   0.0.0.0         UG    0      0        0 eth0
+# 其實看路由就知道啦！那條有點線的就是新增的路由規則！很清楚！
+
+[root@www ~]# telnet localhost 2601
+Password: <==不要忘記了密碼啊！
+www.centos.vbird> show ip route
+Codes: K - kernel route, C - connected, S - static, R - RIP, O - OSPF,
+       I - ISIS, B - BGP, > - selected route, * - FIB route
+
+K>* 0.0.0.0/0 via 192.168.1.254, eth0
+S>* 10.0.0.0/24 [1/0] is directly connected, eth0
+C>* 127.0.0.0/8 is directly connected, lo
+K>* 169.254.0.0/16 is directly connected, eth1
+C>* 192.168.1.0/24 is directly connected, eth0
+C>* 192.168.100.0/24 is directly connected, eth1
+R>* 192.168.200.0/24 [120/2] via 192.168.1.200, eth0, 00:02:43
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
