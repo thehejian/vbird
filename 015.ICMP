@@ -1,0 +1,35 @@
+ICMP 協定
+ICMP 的全名是『 Internet Control Message Protocol, 網際網路訊息控制協定 』。
+基本上，ICMP 是一個錯誤偵測與回報的機制，最大的功能就是可以確保我們網路的連線狀態與連線的正確性！ 
+
+CMP 的類別 (Type)：
+類別代號	類別名稱與意義
+0	Echo Reply (代表一個回應信息)——————《《
+3	Destination Unreachable (表示目的地不可到達)
+4	Source Quench (當 router 的負載過高時，此類別碼可用來讓發送端停止發送訊息)
+5	Redirect (用來重新導向路由路徑的資訊)
+8	Echo Request (請求回應訊息)——————《《
+11	Time Exceeded for a Datagram (當資料封包在某些路由傳送的現象中造成逾時狀態，此類別碼可告知來源該封包已被忽略的訊息)
+12	Parameter Problem on a Datagram (當一個 ICMP 封包重複之前的錯誤時，會回覆來源主機關於參數錯誤的訊息)
+13	Timestamp Request (要求對方送出時間訊息，用以計算路由時間的差異，以滿足同步性協定的要求)
+14	Timestamp Reply (此訊息純粹是回應 Timestamp Request 用的)
+15	Information Request (在 RARP 協定應用之前，此訊息是用來在開機時取得網路信息)
+16	Information Reply (用以回應 Infromation Request 訊息)
+17	Address Mask Request (這訊息是用來查詢子網路 mask 設定信息)
+18	Address Mask Reply (回應子網路 mask 查詢訊息的)
+
+[root@hejian ~]# ping -c 3 1.116.26.230
+PING 1.116.26.230 (1.116.26.230) 56(84) bytes of data.
+64 bytes from 1.116.26.230: icmp_seq=1 ttl=63 time=0.367 ms
+64 bytes from 1.116.26.230: icmp_seq=2 ttl=63 time=0.360 ms
+64 bytes from 1.116.26.230: icmp_seq=3 ttl=63 time=0.307 ms
+
+--- 1.116.26.230 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2000ms
+rtt min/avg/max/mdev = 0.307/0.344/0.367/0.034 ms
+
+[root@hejian ~]# traceroute 1.116.26.230
+traceroute to 1.116.26.230 (1.116.26.230), 30 hops max, 60 byte packets
+ 1  9.30.152.129 (9.30.152.129)  0.546 ms  0.690 ms  0.810 ms
+ 2  www.hejian.com (1.116.26.230)  0.534 ms  0.527 ms  0.383 ms
+ 
