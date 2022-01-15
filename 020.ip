@@ -1,0 +1,250 @@
+ip [option] [動作] [指令]
+選項與參數：
+option ：設定的參數，主要有：
+    -s ：顯示出該裝置的統計數據(statistics)，例如總接受封包數等；
+動作：亦即是可以針對哪些網路參數進行動作，包括有：
+    link  ：關於裝置 (device) 的相關設定，包括 MTU, MAC 位址等等
+    addr/address ：關於額外的 IP 協定，例如多 IP 的達成等等；
+    route ：與路由有關的相關設定
+#########################################################################__>>ip link show
+[root@www ~]# ip [-s] link show  <== 單純的查閱該裝置相關的資訊
+[root@www ~]# ip link set [device] [動作與參數]
+選項與參數：
+show：僅顯示出這個裝置的相關內容，如果加上 -s 會顯示更多統計數據；
+set ：可以開始設定項目， device 指的是 eth0, eth1 等等介面代號；
+動作與參數：包括有底下的這些動作：
+   up|down  ：啟動 (up) 或關閉 (down) 某個介面，其他參數使用預設的乙太網路；
+   address  ：如果這個裝置可以更改 MAC 的話，用這個參數修改！
+   name     ：給予這個裝置一個特殊的名字；
+   mtu      ：就是最大傳輸單元啊！
+
+啟動、關閉與設定裝置的相關資訊
+[root@www ~]# ip link set eth0 up
+# 啟動 eth0 這個裝置介面；
+
+[root@www ~]# ip link set eth0 down
+# 阿就關閉啊！簡單的要命～
+
+[root@www ~]# ip link set eth0 mtu 1000
+# 更改 MTU 的值，達到 1000 bytes，單位就是 bytes 啊！
+
+修改網路卡代號、MAC 等參數
+[root@www ~]# ip link set eth0 name vbird
+SIOCSIFNAME: Device or resource busy
+# 因為該裝置目前是啟動的，所以不能這樣做設定。你應該要這樣做：
+
+[root@www ~]# ip link set eth0 down       <==關閉介面
+[root@www ~]# ip link set eth0 name vbird <==重新設定
+[root@www ~]# ip link show                <==觀察一下
+2: vbird: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
+    link/ether 08:00:27:71:85:bd brd ff:ff:ff:ff:ff:ff
+# 怕了吧！連網路卡代號都可以改變！不過，玩玩後記得改回來啊！
+# 因為我們的 ifcfg-eth0 還是使用原本的裝置代號！避免有問題，要改回來
+
+[root@www ~]# ip link set vbird name eth0 <==介面改回來
+
+[root@www ~]# ip link set eth0 address aa:aa:aa:aa:aa:aa
+[root@www ~]# ip link show eth0
+# 如果你的網路卡支援硬體位址(MAC)可以更改的話，上面這個動作就可以更改
+# 你的網路卡位址了！厲害吧！不過，還是那句老話，測試完之後請立刻改回來啊！
+
+#########################################################################__>>ip address show
+[root@www ~]# ip address show   <==就是查閱 IP 參數啊！
+[root@www ~]# ip address [add|del] [IP參數] [dev 裝置名] [相關參數]
+選項與參數：
+show    ：單純的顯示出介面的 IP 資訊啊；
+add|del ：進行相關參數的增加 (add) 或刪除 (del) 設定，主要有：
+    IP 參數：主要就是網域的設定，例如 192.168.100.100/24 之類的設定喔；
+    dev    ：這個 IP 參數所要設定的介面，例如 eth0, eth1 等等；
+    相關參數：主要有底下這些：
+        broadcast：設定廣播位址，如果設定值是 + 表示『讓系統自動計算』
+        label    ：亦即是這個裝置的別名，例如 eth0:0 就是了！
+        scope    ：這個介面的領域，通常是這幾個大類：
+                   global ：允許來自所有來源的連線；
+                   site   ：僅支援 IPv6 ，僅允許本主機的連線；
+                   link   ：僅允許本裝置自我連線；
+                   host   ：僅允許本主機內部的連線；
+                   所以當然是使用 global 囉！預設也是 global 啦！
+新增一個介面，名稱假設為 eth0:vbird 
+[root@www ~]# ip address add 192.168.50.50/24 broadcast + \
+> dev eth0 label eth0:vbird
+[root@www ~]# ip address show eth0
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP qlen 1000
+    link/ether 08:00:27:71:85:bd brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.100/24 brd 192.168.1.255 scope global eth0
+    inet 192.168.50.50/24 brd 192.168.50.255 scope global eth0:vbird
+    inet6 fe80::a00:27ff:fe71:85bd/64 scope link
+       valid_lft forever preferred_lft forever
+# 看到上面的特殊字體了吧？多出了一行新的介面，且名稱是 eth0:vbird
+# 至於那個 broadcast + 也可以寫成 broadcast 192.168.50.255 啦！
+
+[root@www ~]# ifconfig
+eth0:vbird Link encap:Ethernet  HWaddr 08:00:27:71:85:BD
+          inet addr:192.168.50.50  Bcast:192.168.50.255  Mask:255.255.255.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+# 如果使用 ifconfig 就能夠看到這個怪東西了！可愛吧！ ^_^
+
+# 範例三：將剛剛的介面刪除 
+[root@www ~]# ip address del 192.168.50.50/24 dev eth0
+# 刪除就比較簡單啊！ ^_^
+
+#########################################################################__>>ip route show
+[root@www ~]# ip route show  <==單純的顯示出路由的設定而已
+[root@www ~]# ip route [add|del] [IP或網域] [via gateway] [dev 裝置]
+選項與參數：
+show ：單純的顯示出路由表，也可以使用 list ；
+add|del ：增加 (add) 或刪除 (del) 路由的意思。
+    IP或網域：可使用 192.168.50.0/24 之類的網域或者是單純的 IP ；
+    via     ：從那個 gateway 出去，不一定需要；
+    dev     ：由那個裝置連出去，這就需要了！
+    mtu     ：可以額外的設定 MTU 的數值喔！
+proto：此路由的路由協定，主要有 redirect, kernel, boot, static, ra 等， 其中 kernel 指的是直接由核心判斷自動設定。
+scope：路由的範圍，主要是 link ，亦即是與本裝置有關的直接連線
+
+增加路由，主要是本機直接可溝通的網域
+[root@www ~]# ip route add 192.168.5.0/24 dev eth0
+# 針對本機直接溝通的網域設定好路由，不需要透過外部的路由器
+[root@www ~]# ip route show
+192.168.5.0/24 dev eth0  scope link
+....(以下省略)....
+
+# 範例三：增加可以通往外部的路由，需透過 router 喔！
+[root@www ~]# ip route add 192.168.10.0/24 via 192.168.5.100 dev eth0
+[root@www ~]# ip route show
+192.168.5.0/24 dev eth0  scope link
+....(其他省略)....
+192.168.10.0/24 via 192.168.5.100 dev eth0
+# 仔細看喔，因為我有 192.168.5.0/24 的路由存在 (我的網卡直接聯繫)，
+# 所以才可以將 192.168.10.0/24 的路由丟給 192.168.5.100 
+# 那部主機來幫忙傳遞喔！與之前提到的 route 指令是一樣的限制！
+
+# 範例四：增加預設路由
+[root@www ~]# ip route add default via 192.168.1.254 dev eth0
+# 那個 192.168.1.254 就是我的預設路由器 (gateway) 的意思啊！ ^_^
+# 真的記得，只要一個預設路由就 OK ！
+
+# 範例五：刪除路由
+[root@www ~]# ip route del 192.168.10.0/24
+[root@www ~]# ip route del 192.168.5.0/24
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[root@hejian ~]# ip route show
+default via 172.17.0.1 dev eth0 proto dhcp metric 100 
+172.17.0.0/20 dev eth0 proto kernel scope link src 172.17.0.14 metric 100 
+172.18.0.0/16 dev docker0 proto kernel scope link src 172.18.0.1 
+
+[root@hejian ~]# ip address show eth0
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:cb:9f:92 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.14/20 brd 172.17.15.255 scope global noprefixroute eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fecb:9f92/64 scope link 
+       valid_lft forever preferred_lft forever
+
+[root@hejian ~]# ip link show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:cb:9f:92 brd ff:ff:ff:ff:ff:ff
+3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+    link/ether 02:42:92:87:22:29 brd ff:ff:ff:ff:ff:ff
+6: ip_vti0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ipip 0.0.0.0 brd 0.0.0.0
+62: veth352449f@if61: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP mode DEFAULT group default 
+    link/ether 9e:74:45:d6:be:18 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+64: veth0db3a6a@if63: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP mode DEFAULT group default 
+    link/ether ca:a2:1d:6b:1a:1a brd ff:ff:ff:ff:ff:ff link-netnsid 1
+
+[root@hejian ~]# ip -s link show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    RX: bytes  packets  errors  dropped overrun mcast   
+    3743812    27918    0       0       0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    3743812    27918    0       0       0       0       
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:cb:9f:92 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    13027672636 56384650 0       0       0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    69051911039 58069433 0       0       0       0       
+3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default 
+    link/ether 02:42:92:87:22:29 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    64229502937 31926012 0       0       0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    9352441676 24097305 0       0       0       0       
+6: ip_vti0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ipip 0.0.0.0 brd 0.0.0.0
+    RX: bytes  packets  errors  dropped overrun mcast   
+    0          0        0       0       0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    0          0        0       0       0       0       
+62: veth352449f@if61: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP mode DEFAULT group default 
+    link/ether 9e:74:45:d6:be:18 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    RX: bytes  packets  errors  dropped overrun mcast   
+    1950       22       0       0       0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    17952      29       0       0       0       0       
+64: veth0db3a6a@if63: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master docker0 state UP mode DEFAULT group default 
+    link/ether ca:a2:1d:6b:1a:1a brd ff:ff:ff:ff:ff:ff link-netnsid 1
+    RX: bytes  packets  errors  dropped overrun mcast   
+    2099       26       0       0       0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    17507      24       0       0       0       0 
+
+[root@hejian ~]# ip -s link show eth0
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:cb:9f:92 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    13027702034 56384975 0       0       0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    69051952219 58069724 0       0       0       0 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
