@@ -1,0 +1,95 @@
+[root@www ~]# host [-a] hostname [server]
+選項與參數：
+-a ：列出該主機詳細的各項主機名稱設定資料
+[server] ：可以使用非為 /etc/resolv.conf 的 DNS 伺服器 IP 來查詢。
+dig 更强大
+
+####################################################################_>nslookup
+[root@www ~]# nslookup [-query=[type]] [hostname|IP]
+選項與參數：
+-query=type：查詢的類型，除了傳統的 IP 與主機名稱對應外，DNS 還有很多資訊，
+             所以我們可以查詢很多不同的資訊，包括 mx, cname 等等，
+             例如： -query=mx 的查詢方法！
+
+
+
+
+
+
+
+
+
+
+
+
+[root@hejian ~]# nslookup 1.116.26.230
+** server can't find 230.26.116.1.in-addr.arpa.: NXDOMAIN
+
+[root@hejian ~]# nslookup baidu.com
+Server:         183.60.83.19
+Address:        183.60.83.19#53
+
+Non-authoritative answer:
+Name:   baidu.com
+Address: 220.181.38.251
+Name:   baidu.com
+Address: 220.181.38.148
+
+[root@hejian ~]# nslookup 220.181.38.251
+** server can't find 251.38.181.220.in-addr.arpa.: NXDOMAIN
+
+[root@hejian ~]# dig 220.181.38.251
+
+; <<>> DiG 9.11.4-P2-RedHat-9.11.4-26.P2.el7_9.8 <<>> 220.181.38.251
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 25127
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;220.181.38.251.                        IN      A
+
+;; AUTHORITY SECTION:
+.                       552     IN      SOA     a.root-servers.net. nstld.verisign-grs.com. 2022011500 1800 900 604800 86400
+
+;; Query time: 102 msec
+;; SERVER: 183.60.83.19#53(183.60.83.19)
+;; WHEN: Sat Jan 15 13:58:34 CST 2022
+;; MSG SIZE  rcvd: 107
+
+[root@hejian ~]# dig www.baidu.com
+
+; <<>> DiG 9.11.4-P2-RedHat-9.11.4-26.P2.el7_9.8 <<>> www.baidu.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22002
+;; flags: qr rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;www.baidu.com.                 IN      A
+
+;; ANSWER SECTION:
+www.baidu.com.          376     IN      CNAME   www.a.shifen.com.
+www.a.shifen.com.       74      IN      A       112.80.248.76
+www.a.shifen.com.       74      IN      A       112.80.248.75
+
+;; Query time: 1 msec
+;; SERVER: 183.60.83.19#53(183.60.83.19)
+;; WHEN: Sat Jan 15 13:56:09 CST 2022
+;; MSG SIZE  rcvd: 90
+[root@hejian ~]# host www.baidu.com
+www.baidu.com is an alias for www.a.shifen.com.
+www.a.shifen.com has address 112.80.248.76
+www.a.shifen.com has address 112.80.248.75
+[root@hejian ~]# host -a ww.baidu.com
+Trying "ww.baidu.com"
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 20804
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;ww.baidu.com.                  IN      ANY
+
+;; ANSWER SECTION:
+ww.baidu.com.           7200    IN      CNAME   ps_other.a.shifen.com.
+
+Received 62 bytes from 183.60.83.19#53 in 66 ms
