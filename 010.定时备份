@@ -1,0 +1,26 @@
+[root@localhost ~]# mkdir /root/bin; vim /root/bin/backup.sh
+#!/bin/bash
+backdir="/etc /home /root /var/spool/mail"
+basedir=/backup
+[ ! -d "$basedir" ] && mkdir $basedir
+#-d https://github.com/thehejian/cloud_linux/blob/main/tedu/093字符串-文件-n-e.sh
+#文件判断不见""
+#-e 是否(文件或者目录)存在 exist
+#-d 是否为目录 directory
+#-f 是否为文件 file
+#-s 文件非空
+
+#-r 是否可读 read
+#-w 是否可写 write
+#-x 是否可执行 executable
+
+#-h -L 是否为链接文件 link
+#-c 是否字符设备 
+#-b 是否块设备
+#f1 -nt f2 f1比f2新，则为真 newer then
+#f1 -ot f2 f1比f2旧，则为真 older then
+backfile=$basedir/backup.tar.gz
+tar -zcvf $backfile $backdir
+
+[root@localhost ~]# vim /etc/crontab
+45 2 * * * root sh /root/bin/backup.sh
